@@ -31,11 +31,12 @@ Import-PSSession -Session $adSession -Module ActiveDirectory -CommandName $adCmd
 $endTime = "11:30pm"
 if (!$WhatIf) { "Running until $endTime" }
 do {
- $computerObjs = Get-ADcomputer -Filter * -SearchBase $SourceOrgUnitPath | Where-Object { $_.OperatingSystem -notlike "*Server*" }
+ $computerObjs = Get-ADcomputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
+ Where-Object { $_.OperatingSystem -notlike "*Server*" -and { $_.Description -notlike "*Server*" } }
  foreach ($obj in $computerObjs) {
   # Move Object to TargetPath
   Add-Log action "Moving $($obj.name) to $($TargetOrgUnitPath.split(",")[0])" $WhatIf
-  Move-ADObject -Identity $obj.ObjectGUID -TargetPath $targetOU -Whatif:$WhatIf
+  Move-ADObject -Identity $obj.ObjectGUID -TargetPath $TargetOrgUnitPath -Whatif:$WhatIf
   # Loop every 5 minutes
  }
  Write-Verbose "Next run at $((Get-Date).AddSeconds(180))"
