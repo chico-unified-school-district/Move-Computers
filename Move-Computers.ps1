@@ -1,6 +1,6 @@
 <#
 The scripts is to be run every few minutes. Its purpose it to move
-computers to a more agreeable OU so that GPO's can be applied
+computers (non-server) to a more agreeable OU so that GPO's can be applied
 without extra effort.
 #>
 [cmdletbinding()] 
@@ -31,7 +31,7 @@ Import-PSSession -Session $adSession -Module ActiveDirectory -CommandName $adCmd
 $endTime = "11:30pm"
 if (!$WhatIf) { "Running until $endTime" }
 do {
- $computerObjs = Get-ADcomputer -Filter * -SearchBase $SourceOrgUnitPath | Where-Object { $_.OperatingSystem -notlike "Windows Server*" }
+ $computerObjs = Get-ADcomputer -Filter * -SearchBase $SourceOrgUnitPath | Where-Object { $_.OperatingSystem -notlike "*Server*" }
  foreach ($obj in $computerObjs) {
   # Move Object to TargetPath
   Add-Log action "Moving $($obj.name) to $($TargetOrgUnitPath.split(",")[0])" $WhatIf
