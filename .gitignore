@@ -7,3 +7,5 @@ logs/*
 *.cp
 *desktop.ini
 dekstop.ini
+/notes.ps1
+/jenkins.ps1
