@@ -35,7 +35,7 @@ function Move-NewADComputers {
 
 function New-ADSession ([string[]]$cmdlets, $dc) {
  $adSession = New-PSSession -ComputerName $dc -Credential $ADCredential
- Import-PSSession -Session $adSession -Module ActiveDirectory -CommandName $cmdlets -AllowClobber
+ Import-PSSession -Session $adSession -Module ActiveDirectory -CommandName $cmdlets -AllowClobber | Out-Null
 }
 
 
