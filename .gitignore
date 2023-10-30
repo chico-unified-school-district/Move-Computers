@@ -9,3 +9,4 @@ logs/*
 dekstop.ini
 /notes.ps1
 /jenkins.ps1
+/params.ps1
