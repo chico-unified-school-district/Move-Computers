@@ -1,7 +1,6 @@
-function Select-DomainController {
+function Select-DomainController ([string[]]$DomainControllers) {
  begin {
-  # $myDCs = Get-ADDomain | Select-Object -ExpandProperty ReplicaDirectoryServers
-  $myDCs = Get-ADDomainController -Filter * | Select-Object -ExpandProperty Name
+  $myDCs = $DomainControllers
  }
  process {
   $dc = Get-Random $myDCs

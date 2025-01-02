@@ -6,6 +6,9 @@ without extra effort. Great job!
 [cmdletbinding()]
 param (
  [Parameter(Mandatory = $True)]
+ [Alias('DCs')]
+ [string[]]$DomainControllers,
+ [Parameter(Mandatory = $True)]
  [System.Management.Automation.PSCredential]$ADCredential,
  [Parameter(Mandatory = $True)]
  [Alias('srcOU')]
@@ -53,8 +56,8 @@ function New-ADSession ([string[]]$cmdlets, $dc) {
 function Move-NewObjectsLoop {
  if ( (Get-Date) -ge (Get-Date '11:30pm')) { return }
  Clear-SessionData
- $dc = Select-DomainController
- New-ADSession -cmdlets 'Get-ADComputer', 'Move-ADObject', 'Get-ADDomainController' -dc $dc
+ $dc = Select-DomainController $DomainControllers
+ New-ADSession -cmdlets 'Get-ADComputer', 'Move-ADObject' -dc $dc
  Get-NewADComputers | Move-NewADComputers
  Get-NewADServers | Move-NewADServers
  if ($WhatIf) { return }
