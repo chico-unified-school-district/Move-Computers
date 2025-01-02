@@ -1,13 +1,15 @@
-function Select-DomainController([string[]]$DomainControllers) {
- foreach ($dc in $DomainControllers) {
-  Write-Verbose ('Checking {0},{1}' -f $MyInvocation.MyCommand.Name, $dc)
-  if (Test-Connection -ComputerName $dc -Count 1) {
-   $dc
-   return
+function Select-DomainController {
+ begin {
+  $myDCs = Get-ADDomain | Select-Object -ExpandProperty ReplicaDirectoryServers
+ }
+ process {
+  $dc = Get-Random $myDCs
+  if ( Test-Connection -ComputerName $dc -Count 1 -ErrorAction SilentlyContinue ) { return $dc }
+  else {
+   $msg = $MyInvocation.MyCommand.Name, $dc
+   Write-Host ('{0},{1} Not responding. Trying random Domain Controller in 30 seconds...' -f $msg)
+   Start-Sleep 30
+   Select-DomainController2 $myDCs
   }
  }
- $msgVars = $MyInvocation.MyCommand.Name, ($DomainControllers -join ',')
- Write-Host ('{0},{1},No Controller is reachalbe at this time. Waiting a bit.' -f $msgVars)
- Start-Sleep 30
- Select-DomainController $DomainControllers
 }
