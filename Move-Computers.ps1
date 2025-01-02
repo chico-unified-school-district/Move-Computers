@@ -54,7 +54,7 @@ function Move-NewObjectsLoop {
  if ( (Get-Date) -ge (Get-Date '11:30pm')) { return }
  Clear-SessionData
  $dc = Select-DomainController
- New-ADSession -cmdlets 'Get-ADComputer', 'Move-ADObject', 'Get-ADDomain' -dc $dc
+ New-ADSession -cmdlets 'Get-ADComputer', 'Move-ADObject', 'Get-ADDomainController' -dc $dc
  Get-NewADComputers | Move-NewADComputers
  Get-NewADServers | Move-NewADServers
  if ($WhatIf) { return }
