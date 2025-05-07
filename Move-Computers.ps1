@@ -24,11 +24,11 @@ param (
 
 function Get-NewADComputers {
  Get-ADcomputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
- Where-Object { $_.OperatingSystem -notlike "*Server*" -and { $_.Description -notlike "*Server*" } }
+  Where-Object { $_.OperatingSystem -notlike "*Server*" -and { $_.Description -notlike "*Server*" } }
 }
 function Get-NewADServers {
  Get-ADcomputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
- Where-Object { $_.OperatingSystem -like "*Server*" }
+  Where-Object { $_.OperatingSystem -like "*Server*" }
 }
 
 function Move-NewADComputers {
@@ -47,29 +47,28 @@ function Move-NewADServers {
  }
 }
 
-function New-ADSession ([string[]]$cmdlets, $dc) {
- $adSession = New-PSSession -ComputerName $dc -Credential $ADCredential
- Import-PSSession -Session $adSession -Module ActiveDirectory -CommandName $cmdlets -AllowClobber | Out-Null
-}
+# function New-ADSession ([string[]]$cmdlets, $dc) {
+#  $adSession = New-PSSession -ComputerName $dc -Credential $ADCredential
+#  Import-PSSession -Session $adSession -Module ActiveDirectory -CommandName $cmdlets -AllowClobber | Out-Null
+# }
 
 
-function Move-NewObjectsLoop {
+function Move-NewObjectsLoop ($dcs, $cred) {
  if ( (Get-Date) -ge (Get-Date '11:30pm')) { return }
  Clear-SessionData
- $dc = Select-DomainController $DomainControllers
- New-ADSession -cmdlets 'Get-ADComputer', 'Move-ADObject' -dc $dc
+ Connect-ADSession -DomainControllers $dcs -Credential $cred -Cmdlets 'Get-ADComputer', 'Move-ADObject'
  Get-NewADComputers | Move-NewADComputers
  Get-NewADServers | Move-NewADServers
  if ($WhatIf) { return }
  Write-Verbose "Next run at $((Get-Date).AddSeconds(180))"
- Start-Sleep -Seconds 180
- Move-NewObjectsLoop
+ if (!$WhatIf) { Start-Sleep 180 }
+ Move-NewObjectsLoop $dcs $cred
 }
 
-# main
-. .\lib\Clear-SessionData.ps1
-. .\lib\Select-DomainController.ps1
-. .\lib\Show-TestRun.ps1
+Import-Module 'G:\My Drive\CUSD\Scripts\Powershell\MyModules\CommonScriptFunctions\CommonScriptFunctions.psd1'
 
-Show-TestRun
-Move-NewObjectsLoop
+Show-BlockInfo main
+
+if ($WhatIf) { Show-TestRun }
+Move-NewObjectsLoop -dcs $DomainControllers -cred $ADCredential
+Get-Module -Name CommonScriptFunctions | Remove-Module -Confirm:$false
