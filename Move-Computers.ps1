@@ -65,8 +65,7 @@ function Move-NewObjectsLoop ($dcs, $cred) {
  Move-NewObjectsLoop $dcs $cred
 }
 
-Import-Module 'G:\My Drive\CUSD\Scripts\Powershell\MyModules\CommonScriptFunctions\CommonScriptFunctions.psd1'
-
+Import-Module -Name CommonScriptFunctions
 Show-BlockInfo main
 
 if ($WhatIf) { Show-TestRun }
