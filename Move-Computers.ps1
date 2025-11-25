@@ -23,20 +23,33 @@ param (
  [switch]$WhatIf
 )
 
-function Get-NewADComputers {
- Get-ADComputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
-  Where-Object { $_.OperatingSystem -notlike '*Server*' -and $_.Description -notlike '*Server*' }
-}
-function Get-NewADServers {
- Get-ADComputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
-  Where-Object { $_.OperatingSystem -like '*Server*' }
+function Get-Computers ($ou) {
+ process {
+  Get-ADComputer -Filter * -SearchBase $ou -Properties *
+ }
 }
 
-function Move-NewADObject ($ou){
+function Move-Object {
  process {
-  $msgVars = $MyInvocation.MyCommand.Name, $_.name, $ou.split(',')[0]
+  $msgVars = $MyInvocation.MyCommand.Name, $_.ad.name, $_.ou.split(',')[0]
   Write-Host ('{0},{1},{2}' -f $msgVars ) -Fore Blue
-  Move-ADObject -Identity $_.ObjectGUID -TargetPath $ou -WhatIf:$WhatIf
+  Move-ADObject -Identity $_.ad.ObjectGUID -TargetPath $_.ou -WhatIf:$WhatIf
+ }
+}
+
+function New-Object {
+ process {
+  $obj = '' | Select-Object ad, ou
+  $obj.ad = $_
+  $obj.ou = $null
+  $obj
+ }
+}
+
+function Set-Ou ($defaultOU, $serverOU) {
+ process {
+  $_.ou = if ($_.ad.OperatingSystem -like '*Server*') { $serverOU } else { $defaultOU }
+  $_
  }
 }
 
@@ -48,20 +61,23 @@ function Skip-NewObjs {
  }
 }
 
-# ================================= main ==================================
 function Move-NewObjectsLoop ($dcs, $cred) {
  if ( (Get-Date) -ge (Get-Date '11:30pm')) { return }
  Clear-SessionData
  Connect-ADSession -DomainControllers $dcs -Credential $cred -Cmdlets 'Get-ADComputer', 'Move-ADObject'
- Get-NewADComputers | Skip-NewObjs | Move-NewADObject -ou $CompOrgUnitPath
- Get-NewADServers | Skip-NewObjs | Move-NewADObject -ou $ServerOrgUnitPath
+ Get-Computers $SourceOrgUnitPath |
+  New-Object |
+   Set-Ou $CompOrgUnitPath $ServerOrgUnitPath |
+    Skip-NewObjs |
+     Move-Object
  if ($WhatIf) { return }
  Write-Verbose "Next run at $((Get-Date).AddSeconds(180))"
  if (!$WhatIf) { Start-Sleep 300 }
  Move-NewObjectsLoop $dcs $cred
 }
 
-Import-Module -Name CommonScriptFunctions
+# ================================= main ==================================
+Import-Module -Name CommonScriptFunctions -Cmdlet Connect-ADSession, Clear-SessionData, Show-BlockInfo, Show-TestRun
 Show-BlockInfo main
 
 if ($WhatIf) { Show-TestRun }
