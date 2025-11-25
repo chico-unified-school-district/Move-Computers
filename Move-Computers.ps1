@@ -71,7 +71,7 @@ function Move-NewObjectsLoop ($dcs, $cred) {
     Skip-NewObjs |
      Move-Object
  if ($WhatIf) { return }
- Write-Verbose "Next run at $((Get-Date).AddSeconds(180))"
+ Write-Verbose "Next run at $((Get-Date).AddSeconds(300))"
  if (!$WhatIf) { Start-Sleep 300 }
  Move-NewObjectsLoop $dcs $cred
 }
