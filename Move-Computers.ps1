@@ -23,40 +23,46 @@ param (
 )
 
 function Get-NewADComputers {
- Get-ADcomputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
-  Where-Object { $_.OperatingSystem -notlike "*Server*" -and { $_.Description -notlike "*Server*" } }
+ Get-ADComputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
+  Where-Object { $_.OperatingSystem -notlike '*Server*' -and { $_.Description -notlike '*Server*' } }
 }
 function Get-NewADServers {
- Get-ADcomputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
-  Where-Object { $_.OperatingSystem -like "*Server*" }
+ Get-ADComputer -Filter * -SearchBase $SourceOrgUnitPath -Properties * |
+  Where-Object { $_.OperatingSystem -like '*Server*' }
 }
 
 function Move-NewADComputers {
  process {
-  $msgVars = $MyInvocation.MyCommand.Name, $_.name, $CompOrgUnitPath.split(",")[0]
+  $msgVars = $MyInvocation.MyCommand.Name, $_.name, $CompOrgUnitPath.split(',')[0]
   Write-Host ('{0},{1},{2}' -f $msgVars ) -Fore Blue
-  Move-ADObject -Identity $_.ObjectGUID -TargetPath $CompOrgUnitPath -Whatif:$WhatIf
+  Move-ADObject -Identity $_.ObjectGUID -TargetPath $CompOrgUnitPath -WhatIf:$WhatIf
  }
 }
 
 function Move-NewADServers {
  process {
-  $msgVars = $MyInvocation.MyCommand.Name, $_.name, $ServerOrgUnitPath.split(",")[0]
+  $msgVars = $MyInvocation.MyCommand.Name, $_.name, $ServerOrgUnitPath.split(',')[0]
   Write-Host ('{0},{1},{2}' -f $msgVars ) -Fore Green
-  Move-ADObject -Identity $_.ObjectGUID -TargetPath $ServerOrgUnitPath -Whatif:$WhatIf
+  Move-ADObject -Identity $_.ObjectGUID -TargetPath $ServerOrgUnitPath -WhatIf:$WhatIf
+ }
+}
+function Skip-NewObjs {
+ process {
+  if ($_.WhenCreated -gt (Get-Date).AddMinutes(-10)) {}
+  $_
  }
 }
 
-
+# ================================= main ==================================
 function Move-NewObjectsLoop ($dcs, $cred) {
  if ( (Get-Date) -ge (Get-Date '11:30pm')) { return }
  Clear-SessionData
  Connect-ADSession -DomainControllers $dcs -Credential $cred -Cmdlets 'Get-ADComputer', 'Move-ADObject'
- Get-NewADComputers | Move-NewADComputers
- Get-NewADServers | Move-NewADServers
+ Get-NewADComputers | Skip-NewObjs | Move-NewADComputers
+ Get-NewADServers | Skip-NewObjs | Move-NewADServers
  if ($WhatIf) { return }
  Write-Verbose "Next run at $((Get-Date).AddSeconds(180))"
- if (!$WhatIf) { Start-Sleep 180 }
+ if (!$WhatIf) { Start-Sleep 300 }
  Move-NewObjectsLoop $dcs $cred
 }
 
