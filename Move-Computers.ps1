@@ -47,11 +47,6 @@ function Move-NewADServers {
  }
 }
 
-# function New-ADSession ([string[]]$cmdlets, $dc) {
-#  $adSession = New-PSSession -ComputerName $dc -Credential $ADCredential
-#  Import-PSSession -Session $adSession -Module ActiveDirectory -CommandName $cmdlets -AllowClobber | Out-Null
-# }
-
 
 function Move-NewObjectsLoop ($dcs, $cred) {
  if ( (Get-Date) -ge (Get-Date '11:30pm')) { return }
