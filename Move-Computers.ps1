@@ -48,16 +48,21 @@ function New-Object {
 
 function Set-Ou ($defaultOU, $serverOU) {
  process {
-  $_.ou = if ($_.ad.OperatingSystem -like '*Server*') { $serverOU } else { $defaultOU }
+  $_.ou = if (($_.ad.OperatingSystem -like '*Windows*') -and ($_.ad.OperatingSystem -notlike '*Server*')) {
+   $defaultOU
+  }
+  else { $serverOU }
   $_
  }
 }
 
-function Skip-NewObjs {
+function Skip-NoOS {
  process {
-  if ($_.WhenCreated -le (Get-Date).AddMinutes(-10)) {
-   $_
+  if (!$_.OperatingSystem) {
+   Write-Host ('Skipping {0} due to missing OS' -f $_.ad.name) -Fore Red
+   return
   }
+  $_
  }
 }
 
@@ -68,7 +73,7 @@ function Move-NewObjectsLoop ($dcs, $cred) {
  Get-Computers $SourceOrgUnitPath |
   New-Object |
    Set-Ou $CompOrgUnitPath $ServerOrgUnitPath |
-    Skip-NewObjs |
+    Skip-NoOS |
      Move-Object
  if ($WhatIf) { return }
  Write-Verbose "Next run at $((Get-Date).AddSeconds(300))"
