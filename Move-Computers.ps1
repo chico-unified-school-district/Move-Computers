@@ -58,7 +58,7 @@ function Set-Ou ($defaultOU, $serverOU) {
 
 function Skip-NoOS {
  process {
-  if (!$_.OperatingSystem) {
+  if (!$_.ad.OperatingSystem) {
    Write-Host ('Skipping {0} due to missing OS' -f $_.ad.name) -Fore Red
    return
   }
