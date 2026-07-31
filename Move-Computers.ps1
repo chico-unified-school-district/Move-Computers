@@ -6,18 +6,14 @@ without extra effort. Great job!
 [cmdletbinding()]
 param (
  [Parameter(Mandatory = $True)]
- [Alias('DCs')]
  [string[]]$DomainControllers,
  [Parameter(Mandatory = $True)]
  [System.Management.Automation.PSCredential]$ADCredential,
  [Parameter(Mandatory = $True)]
- [Alias('srcOU')]
  [string]$SourceOrgUnitPath,
  [Parameter(Mandatory = $True)]
- [Alias('compOU')]
  [string]$CompOrgUnitPath,
  [Parameter(Mandatory = $True)]
- [Alias('serverOU')]
  [string]$ServerOrgUnitPath,
  [Alias('wi')]
  [switch]$WhatIf
@@ -66,13 +62,13 @@ function Skip-NoOS {
  }
 }
 
-function Move-NewObjectsLoop ($dcs, $cred) {
+function Move-NewObjectsLoop ([string[]]$dcs, $cred) {
  if ( (Get-Date) -ge (Get-Date '11:30pm')) { return }
  Clear-SessionData
  Connect-ADSession -DomainControllers $dcs -Credential $cred -Cmdlets 'Get-ADComputer', 'Move-ADObject'
- Get-Computers $SourceOrgUnitPath |
+ Get-Computers -ou $SourceOrgUnitPath |
   New-Object |
-   Set-Ou $CompOrgUnitPath $ServerOrgUnitPath |
+   Set-Ou -defaultOU $CompOrgUnitPath -serverOU $ServerOrgUnitPath |
     Skip-NoOS |
      Move-Object
  if ($WhatIf) { return }

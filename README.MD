@@ -24,14 +24,14 @@ The script runs in a loop (every 5 minutes) to automatically organize computer o
 
 ## Parameters
 
-| Parameter | Alias | Type | Required | Description |
-|-----------|-------|------|----------|-------------|
-| `DomainControllers` | `DCs` | string[] | Yes | Array of domain controller names to connect to |
-| `ADCredential` | - | PSCredential | Yes | Credentials for Active Directory authentication |
-| `SourceOrgUnitPath` | `srcOU` | string | Yes | Distinguished name of the source OU to monitor |
-| `CompOrgUnitPath` | `compOU` | string | Yes | Target OU for non-server computer objects |
-| `ServerOrgUnitPath` | `serverOU` | string | Yes | Target OU for server objects |
-| `WhatIf` | `wi` | switch | No | Run in test mode without making actual changes |
+| Parameter           | Alias      | Type         | Required | Description                                     |
+| ------------------- | ---------- | ------------ | -------- | ----------------------------------------------- |
+| `DomainControllers` | `DCs`      | string[]     | Yes      | Array of domain controller names to connect to  |
+| `ADCredential`      | -          | PSCredential | Yes      | Credentials for Active Directory authentication |
+| `SourceOrgUnitPath` | `srcOU`    | string       | Yes      | Distinguished name of the source OU to monitor  |
+| `CompOrgUnitPath`   | `compOU`   | string       | Yes      | Target OU for non-server computer objects       |
+| `ServerOrgUnitPath` | `serverOU` | string       | Yes      | Target OU for server objects                    |
+| `WhatIf`            | `wi`       | switch       | No       | Run in test mode without making actual changes  |
 
 ## Usage
 
@@ -73,6 +73,7 @@ $global:params = @{
 ```
 
 Then execute:
+
 ```powershell
 .\params.ps1 # Creates a hashtable of parameters
 .\Move-Computers.ps1 @params
@@ -94,6 +95,7 @@ Get-Computers → New-Object → Set-Ou → Skip-NewObjs → Move-Object
 ```
 
 Each function operates on the pipeline:
+
 - **Get-Computers**: Retrieves all computers from source OU
 - **New-Object**: Wraps AD object in custom object with `ad` and `ou` properties
 - **Set-Ou**: Assigns target OU based on OS type (server vs workstation)
@@ -103,6 +105,7 @@ Each function operates on the pipeline:
 ## Scheduling
 
 While the script contains its own loop mechanism, it's recommended to schedule it via:
+
 - **Task Scheduler**: Run at system startup or specific times
 - **Jenkins**: Automated CI/CD pipeline execution
 - **Service**: Run as a Windows service for continuous operation
@@ -112,10 +115,12 @@ The script will automatically terminate at 11:30 PM each day to allow for mainte
 ## Logging
 
 The script outputs colored console messages indicating actions:
+
 - **Blue**: Computer movements
 - **Green**: Server movements (legacy, now uses same Move-Object function)
 
 Example output:
+
 ```
 Move-Object,COMPUTER01,OU=Workstations
 Move-Object,SERVER01,OU=Servers
@@ -131,23 +136,27 @@ Move-Object,SERVER01,OU=Servers
 ## Troubleshooting
 
 ### Objects Not Moving
+
 - Verify source OU path is correct
 - Check that objects are older than 10 minutes
 - Ensure credential has move permissions
 - Run with `-WhatIf` to see what would happen
 
 ### Script Stops Prematurely
+
 - Check if it's past 11:30 PM (automatic cutoff)
 - Verify PSRemoting is enabled on domain controllers
 - Check network connectivity to DCs
 
 ### Server Detected as Workstation (or vice versa)
+
 - Verify the `OperatingSystem` property on the AD object
 - The script checks if `OperatingSystem -like '*Server*'`
 
 ## Contributing
 
 When modifying this script:
+
 1. Test thoroughly with `-WhatIf` first
 2. Ensure the pipeline functions maintain the custom object structure (`ad`, `ou` properties)
 3. Update this README with any parameter or functionality changes
@@ -160,4 +169,4 @@ When modifying this script:
 
 ## License
 
-Internal use for CUSD (Chico Unified School District)
+Internal use for CUSD (Chico Unified School District). Please feel free to clone and modify for your org's needs!
