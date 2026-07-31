@@ -6,8 +6,6 @@ without extra effort. Great job!
 [cmdletbinding()]
 param (
  [Parameter(Mandatory = $True)]
- [string[]]$DomainControllers,
- [Parameter(Mandatory = $True)]
  [System.Management.Automation.PSCredential]$ADCredential,
  [Parameter(Mandatory = $True)]
  [string]$SourceOrgUnitPath,
