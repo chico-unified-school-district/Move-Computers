@@ -21,7 +21,7 @@ param (
 
 function Get-Computers ($ou) {
  process {
-  Get-ADComputer -Filter * -SearchBase $ou -Properties *
+  Get-ADComputer -Filter * -SearchBase $ou -Properties * -Credential $ADCredential
  }
 }
 
@@ -29,7 +29,7 @@ function Move-Object {
  process {
   $msgVars = $MyInvocation.MyCommand.Name, $_.ad.name, $_.ou.split(',')[0]
   Write-Host ('{0},{1},{2}' -f $msgVars ) -Fore Blue
-  Move-ADObject -Identity $_.ad.ObjectGUID -TargetPath $_.ou -WhatIf:$WhatIf
+  Move-ADObject -Identity $_.ad.ObjectGUID -TargetPath $_.ou -Credential $ADCredential -WhatIf:$WhatIf
  }
 }
 
@@ -62,10 +62,9 @@ function Skip-NoOS {
  }
 }
 
-function Move-NewObjectsLoop ([string[]]$dcs, $cred) {
+function Move-NewObjectsLoop {
  if ( (Get-Date) -ge (Get-Date '11:30pm')) { return }
  Clear-SessionData
- Connect-ADSession -DomainControllers $dcs -Credential $cred -Cmdlets 'Get-ADComputer', 'Move-ADObject'
  Get-Computers -ou $SourceOrgUnitPath |
   New-Object |
    Set-Ou -defaultOU $CompOrgUnitPath -serverOU $ServerOrgUnitPath |
@@ -74,13 +73,13 @@ function Move-NewObjectsLoop ([string[]]$dcs, $cred) {
  if ($WhatIf) { return }
  Write-Verbose "Next run at $((Get-Date).AddSeconds(300))"
  if (!$WhatIf) { Start-Sleep 300 }
- Move-NewObjectsLoop $dcs $cred
+ Move-NewObjectsLoop
 }
 
 # ================================= main ==================================
-Import-Module -Name CommonScriptFunctions -Cmdlet Connect-ADSession, Clear-SessionData, Show-BlockInfo, Show-TestRun
+Import-Module -Name CommonScriptFunctions -Cmdlet Clear-SessionData, Show-BlockInfo, Show-TestRun
 Show-BlockInfo main
 
 if ($WhatIf) { Show-TestRun }
-Move-NewObjectsLoop -dcs $DomainControllers -cred $ADCredential
+Move-NewObjectsLoop
 Get-Module -Name CommonScriptFunctions | Remove-Module -Confirm:$false
